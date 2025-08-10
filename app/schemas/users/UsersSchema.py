@@ -6,14 +6,18 @@ from typing import Optional
 # class Role(str, Enum):
 #     admin = "admin"
 #     user = "user"
-  
-class UserCreate(SQLModel):
-    name: str
-    email: str
-    password: str
-    # role: Optional[Role] = None  # Lo dejamos opcional
-
 
 class UserLogin(BaseModel):
     email: str
     password: str
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str

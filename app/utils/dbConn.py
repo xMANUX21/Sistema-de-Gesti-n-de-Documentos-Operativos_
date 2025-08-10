@@ -1,28 +1,61 @@
 import os
+import mysql.connector
 from dotenv import load_dotenv
-from sqlmodel import Field,Session,create_engine,select,SQLModel
-from typing import Annotated
-
-from fastapi import FastAPI, Depends
+from fastapi import Depends
+from typing import Generator
 
 load_dotenv()
 
-db_username= os.getenv('USER_DB')
-db_password= os.getenv('PASSWORD_DB')
-db_host=os.getenv('HOST_DB')
-db_name=os.getenv('NAME_DB')
+db_username = os.getenv('USER_DB')
+db_password = os.getenv('PASSWORD_DB')
+db_host = os.getenv('HOST_DB')
+db_name = os.getenv('NAME_DB')
 
 
-#Esto va a ir en el .env
-url_connection = f'mysql+pymysql://{db_username}:{db_password}@{db_host}:3306/{db_name}'
+#  Dependencia para obtener conexión a MySQL
+def get_db_connection() -> Generator[mysql.connector.MySQLConnection, None, None]:
+    connection = mysql.connector.connect(
+        host=db_host,
+        user=db_username,
+        password=db_password,
+        database=db_name
+    )
+    try:
+        yield connection
+    finally:
+        if connection.is_connected():
+            connection.close()
 
-engine=create_engine(url_connection)
 
+#  Función para inicializar la DB y tablas
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-def get_session():
-    with Session(engine) as session:
-        yield session # Se trabaja con una conexion por sesion , para no tener que cada vez crear una nueva
-
-session_dep=Annotated[Session,Depends(get_session)] # Hace que cada vez que se llame a session dep , se haga una nueva sesion 
+    try:
+        startup_db_connection = mysql.connector.connect(
+            host=db_host,
+            user=db_username,
+            password=db_password,
+            database=db_name
+        )
+        cursor = startup_db_connection.cursor()
+        
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(50) DEFAULT 'operador',
+            department VARCHAR(255),
+            failed_attempts INT DEFAULT 0,
+            is_locked BOOLEAN DEFAULT FALSE
+        );
+        """
+        cursor.execute(create_table_sql)
+        startup_db_connection.commit()
+        print("Tabla 'users' verificada/creada exitosamente.")
+        cursor.close()
+    except mysql.connector.Error as err:
+        print(f"Error al crear o verificar la tabla 'users': {err}")
+    finally:
+        if 'startup_db_connection' in locals() and startup_db_connection.is_connected():
+            startup_db_connection.close()

@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends
 # from app.auth.controller import router as auth_router
 from app.routes.auth_routes import router as loginRouter
 from app.routes.users.UsersRoutes import router as userRouter
+from app.routes.documents.document_routes import router as documentRouter
 
 
 app = FastAPI()
@@ -10,6 +11,7 @@ app = FastAPI()
 # app.include_router(auth_router, prefix="/api/auth")
 app.include_router(loginRouter, prefix="/api/auth")
 app.include_router(userRouter,prefix="/api/users")
+app.include_router(documentRouter, prefix="/api/documents")
 
 
 @app.get("/")

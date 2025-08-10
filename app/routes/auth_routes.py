@@ -80,3 +80,7 @@ def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depe
         raise e
     finally:
         cursor.close()
+
+@router.get("/ping")
+def ping():
+    return {"ok": True, "service": "auth stub"}        

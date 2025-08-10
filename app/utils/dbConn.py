@@ -37,8 +37,9 @@ def create_db_and_tables():
             database=db_name
         )
         cursor = startup_db_connection.cursor()
-        
-        create_table_sql = """
+
+        # === Tabla de usuarios (tema operadores) ===
+        create_users_sql = """
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
@@ -50,12 +51,26 @@ def create_db_and_tables():
             is_locked BOOLEAN DEFAULT FALSE
         );
         """
-        cursor.execute(create_table_sql)
+        cursor.execute(create_users_sql)
+
+        # === Tabla de documentos PDF ===
+        create_documents_sql = """
+        CREATE TABLE IF NOT EXISTS documentos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(255) NOT NULL,
+            contenido LONGTEXT NOT NULL,
+            fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        cursor.execute(create_documents_sql)
+
         startup_db_connection.commit()
-        print("Tabla 'users' verificada/creada exitosamente.")
+        print("Tablas 'users' y 'documentos' verificadas/creadas exitosamente.")
         cursor.close()
+
     except mysql.connector.Error as err:
-        print(f"Error al crear o verificar la tabla 'users': {err}")
+        print(f"Error al crear o verificar tablas: {err}")
+
     finally:
         if 'startup_db_connection' in locals() and startup_db_connection.is_connected():
             startup_db_connection.close()

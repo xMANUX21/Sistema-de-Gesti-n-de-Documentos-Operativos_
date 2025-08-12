@@ -12,7 +12,7 @@ from app.utils.dependencies import is_admin
 router = APIRouter(tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED , dependencies=[Depends(is_admin)])
 def register_user(user_data: UserCreate = Body(...), db_connection: mysql.connector.MySQLConnection = Depends(get_db_connection)):
     cursor = db_connection.cursor(dictionary=True)
     

@@ -7,6 +7,7 @@ from typing import Annotated
 from  app.auth.controllers.users.UsersController import reset_failed_attempts ,increase_failed_attempts
 from app.utils.security import create_access_token,hash_password,verify_password
 from app.auth.controllers.users.UsersController import assign_role_based_on_count
+from app.utils.dependencies import is_admin
 
 router = APIRouter(tags=["auth"])
 
@@ -81,6 +82,3 @@ def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depe
     finally:
         cursor.close()
 
-@router.get("/ping")
-def ping():
-    return {"ok": True, "service": "auth stub"}        

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from enum import Enum
 from sqlmodel import Field, SQLModel
 from typing import Optional
@@ -22,3 +22,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+
+class ResetPassword(BaseModel):
+    token: str
+    password: str

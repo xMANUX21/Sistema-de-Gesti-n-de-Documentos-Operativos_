@@ -1,13 +1,26 @@
 from fastapi import APIRouter, HTTPException, Depends ,status ,Body
-from app.schemas.users.UsersSchema import UserCreate, UserLogin ,UserResponse
+from app.schemas.users.UsersSchema import UserCreate, UserLogin ,UserResponse ,ResetPassword
 from app.utils.dbConn import get_db_connection
 import mysql.connector
 from passlib.hash import bcrypt
 from typing import Annotated
 from  app.auth.controllers.users.UsersController import increase_failed_attempts
-from app.utils.security import create_access_token,hash_password,verify_password
+from app.utils.security import create_access_token,hash_password,verify_password ,hash_token
 from app.auth.controllers.users.UsersController import assign_role_based_on_count
 from app.utils.dependencies import is_admin
+from app.utils.emailUtils import send_reset_password_email
+import uuid
+from datetime import datetime ,timedelta
+from dotenv import load_dotenv
+import os
+import bcrypt
+
+load_dotenv()
+
+db_host = os.getenv('HOST_DB')
+front_port = os.getenv('FRONT_PORT') # Variable del puerto
+
+
 
 router = APIRouter(tags=["auth"])
 
@@ -81,6 +94,88 @@ def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depe
         token = create_access_token(token_payload)
         
         return {"access_token": token, "token_type": "bearer"}
+    except Exception as e:
+        db_connection.rollback()
+        raise e
+    finally:
+        cursor.close()
+
+
+
+
+
+@router.post("/forgot-password")
+def forgot_password(email: str = Body(..., embed=True), db_connection: mysql.connector.MySQLConnection = Depends(get_db_connection)):
+    cursor = db_connection.cursor(dictionary=True) # <-- Cambiar a dictionary=True para obtener un dict
+    try:
+        # Buscar usuario por email y obtener su info completa
+        sql_select = "SELECT id, name, email FROM users WHERE email = %s"
+        cursor.execute(sql_select, (email,))
+        user_info = cursor.fetchone() #  user_info ahora es un diccionario
+
+        if not user_info:
+            return {"message": "Si el email existe, se ha enviado un enlace para restablecer la contraseña."}
+        
+        user_id = user_info['id'] #  Accede al ID correctamente
+
+        #  para generar y guardar el token 
+        raw_token = str(uuid.uuid4())
+        hashed_token = hash_token(raw_token)
+        expires_at = datetime.now() + timedelta(minutes=15)
+        
+        sql_insert = "INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (%s, %s, %s)"
+        cursor.execute(sql_insert, (user_id, hashed_token, expires_at))
+        db_connection.commit()
+
+        # Enviar el email con el token SIN HASHEAR
+        reset_link = f"http://{db_host}:{front_port}/reset-password?token={raw_token}"
+        send_reset_password_email(user_info, reset_link) #  Pasa el diccionario user_info
+
+        return {"message": " Se ha enviado un enlace al email, para restablecer la contraseña."}
+    except Exception as e:
+        db_connection.rollback()
+        raise e
+    finally:
+        cursor.close()
+
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPassword, db_connection: mysql.connector.MySQLConnection = Depends(get_db_connection)):
+    cursor = db_connection.cursor(dictionary=True) # Usamos dictionary=True para facilitar
+    try:
+        # 1. Buscar todos los tokens que sean validos (no usados y no expirados)
+        sql_select = "SELECT user_id, token_hash, expires_at FROM password_reset_tokens WHERE used_at IS NULL AND expires_at > NOW()"
+        cursor.execute(sql_select)
+        possible_tokens = cursor.fetchall()
+        
+        found_token = None
+        
+        # 2. Iterar sobre ellos y verificar la coincidencia con bcrypt.checkpw
+        for token_record in possible_tokens:
+            if bcrypt.checkpw(data.token.encode('utf-8'), token_record['token_hash'].encode('utf-8')):
+                found_token = token_record
+                break
+        
+        if not found_token:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token inválido o ya usado.")
+        
+        user_id = found_token['user_id']
+
+        # 3. Hashear la nueva contraseña
+        hashed_password = hash_password(data.password)
+        
+        # 4. Actualizar la contraseña del usuario
+        sql_update_password = "UPDATE users SET password_hash = %s WHERE id = %s"
+        cursor.execute(sql_update_password, (hashed_password, user_id))
+        
+        # 5. Marcar el token como usado
+        sql_update_token = "UPDATE password_reset_tokens SET used_at = %s WHERE user_id = %s AND token_hash = %s"
+        cursor.execute(sql_update_token, (datetime.now(), user_id, found_token['token_hash']))
+        
+        db_connection.commit()
+        
+        return {"message": "Contraseña restablecida con éxito."}
     except Exception as e:
         db_connection.rollback()
         raise e

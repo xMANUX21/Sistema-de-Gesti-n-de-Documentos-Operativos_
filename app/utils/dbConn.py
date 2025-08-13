@@ -83,6 +83,20 @@ def create_db_and_tables():
         );
         """
         cursor.execute(create_documents_sql)
+
+        create_password_reset_tokens="""
+            CREATE TABLE password_reset_tokens (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            token_hash VARCHAR(255) NOT NULL,
+            expires_at DATETIME NOT NULL,
+            used_at DATETIME NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+        """
+        cursor.execute(create_password_reset_tokens)
+
         #Proceso para que se cree el primer usuario que sera admin
         cursor.execute("SELECT COUNT(*) FROM users")
         total_users = cursor.fetchone()[0]
@@ -98,7 +112,7 @@ def create_db_and_tables():
 
 
         startup_db_connection.commit()
-        print("Tablas 'users' y 'documentos' verificadas/creadas exitosamente.")
+        print("Tablas 'users' , 'password_reset_tokens'y 'documentos' verificadas/creadas exitosamente.")
         cursor.close()
 
     except mysql.connector.Error as err:

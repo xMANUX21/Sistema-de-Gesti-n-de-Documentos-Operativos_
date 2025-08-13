@@ -5,11 +5,19 @@ from app.utils.security import create_access_token
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from app.utils.security import SECRET_KEY, ALGORITHM
+from app.utils.emailUtils import send_unlock_email
 import mysql.connector
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+db_host = os.getenv('HOST_DB')
+front_port = os.getenv('FRONT_PORT') # Variable del puerto
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-
+#Ahora sirve para asignar el role operador , ya que hay un admin predeterminado
 def assign_role_based_on_count(db_connection: mysql.connector.MySQLConnection) -> str:
     cursor = db_connection.cursor()
     try:
@@ -31,46 +39,62 @@ def assign_role_based_on_count(db_connection: mysql.connector.MySQLConnection) -
         cursor.close()
 
 
- # Aumenta el contador de intentos fallidos para un usuario.
-# Si excede un limite bloquea la cuenta.
+ # Aumenta el contador de intentos fallidos para un usuario. Si excede un limite bloquea la cuenta.
+# Aumenta el contador de intentos fallidos para un usuario,si no es un admin.
 def increase_failed_attempts(db_connection: mysql.connector.MySQLConnection, user_id: int):
-    
-    cursor = db_connection.cursor()
+    cursor = db_connection.cursor(dictionary=True)
     try:
-        # Obtener el número actual de intentos fallidos
-        cursor.execute("SELECT failed_attempts FROM users WHERE id = %s", (user_id,))
-        result = cursor.fetchone()
-        current_attempts = result[0] if result else 0
-
-        new_attempts = current_attempts + 1
+        cursor.execute("SELECT id, name, email, role, failed_attempts FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
         
-        #  bloquear la cuenta si se supera el límite
-        if new_attempts >= 5: # Se puede ajustar aqui el limite
+        if not user_info or user_info["role"] == "admin":
+            return
+            
+        new_attempts = user_info["failed_attempts"] + 1
+        
+        if new_attempts >= 5:
             sql_update = "UPDATE users SET failed_attempts = %s, is_locked = TRUE WHERE id = %s"
             cursor.execute(sql_update, (new_attempts, user_id))
+            
+            # --- Enviar email al admin ---
+            unlock_link = f"http://{db_host}:{front_port}/admin/dashboard" 
+            send_unlock_email(user_info, unlock_link)
+            
         else:
             sql_update = "UPDATE users SET failed_attempts = %s WHERE id = %s"
             cursor.execute(sql_update, (new_attempts, user_id))
         
-        db_connection.commit() # Guarda los cambios
+        db_connection.commit()
     except Exception as e:
-        db_connection.rollback() # Revertir si hay un error
+        db_connection.rollback()
         print(f"Error al aumentar intentos fallidos: {e}")
     finally:
         cursor.close()
 
 
 
-# Resetea el contador de intentos fallidos a 0 y desbloquea la cuenta.
-def reset_failed_attempts(db_connection: mysql.connector.MySQLConnection, user_id: int):
+
+
+
+
+
+
+
+
+
+
+
+
+# # Resetea el contador de intentos fallidos a 0 y desbloquea la cuenta.
+# def reset_failed_attempts(db_connection: mysql.connector.MySQLConnection, user_id: int):
    
-    cursor = db_connection.cursor()
-    try:
-        sql_update = "UPDATE users SET failed_attempts = 0, is_locked = FALSE WHERE id = %s"
-        cursor.execute(sql_update, (user_id,))
-        db_connection.commit() # Guarda los cambios
-    except Exception as e:
-        db_connection.rollback() # Revertir si hay un error
-        print(f"Error al resetear intentos fallidos: {e}")
-    finally:
-        cursor.close()
+#     cursor = db_connection.cursor()
+#     try:
+#         sql_update = "UPDATE users SET failed_attempts = 0, is_locked = FALSE WHERE id = %s"
+#         cursor.execute(sql_update, (user_id,))
+#         db_connection.commit() # Guarda los cambios
+#     except Exception as e:
+#         db_connection.rollback() # Revertir si hay un error
+#         print(f"Error al resetear intentos fallidos: {e}")
+#     finally:
+#         cursor.close()

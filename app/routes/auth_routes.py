@@ -4,13 +4,12 @@ from app.utils.dbConn import get_db_connection
 import mysql.connector
 from passlib.hash import bcrypt
 from typing import Annotated
-from  app.auth.controllers.users.UsersController import reset_failed_attempts ,increase_failed_attempts
+from  app.auth.controllers.users.UsersController import increase_failed_attempts
 from app.utils.security import create_access_token,hash_password,verify_password
 from app.auth.controllers.users.UsersController import assign_role_based_on_count
 from app.utils.dependencies import is_admin
 
 router = APIRouter(tags=["auth"])
-
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED , dependencies=[Depends(is_admin)])
 def register_user(user_data: UserCreate = Body(...), db_connection: mysql.connector.MySQLConnection = Depends(get_db_connection)):
@@ -51,34 +50,39 @@ def register_user(user_data: UserCreate = Body(...), db_connection: mysql.connec
         cursor.close()
 
 
+# app/routes/auth_routes.py
 @router.post("/login")
 def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depends(get_db_connection)):
     cursor = db_connection.cursor(dictionary=True)
     
     try:
-        # 1. Buscar usuario por email
-        sql_select = "SELECT id, email, password_hash, role FROM users WHERE email = %s"
+        # 1. Buscar usuario por email y obtener los campos de bloqueo
+        sql_select = "SELECT id, email, password_hash, role, is_locked, failed_attempts FROM users WHERE email = %s"
         cursor.execute(sql_select, (data.email,))
         user_db = cursor.fetchone()
-        
         # 2. Verificar si el usuario existe
         if not user_db:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
 
-        # 3. Verificar la contraseña usando verify_password
+        # Verificar si la cuenta está bloqueada
+        if user_db["is_locked"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="La cuenta está bloqueada. Por favor, contacta a soporte.")
+         # 4. Verificar la contraseña
         if not verify_password(data.password, user_db["password_hash"]):
+             # Si la contraseña es incorrecta, aumentan los intentos fallidos
+            increase_failed_attempts(db_connection, user_db["id"])
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
         
-        # 4. Si la contraseña es correcta, generar y devolver el token JWT
+        # Generar y devolver el token JWT (aquí no hay reseteo)
         token_payload = {
             "sub": str(user_db["id"]),
             "role": user_db["role"]
         }
         token = create_access_token(token_payload)
-
+        
         return {"access_token": token, "token_type": "bearer"}
     except Exception as e:
+        db_connection.rollback()
         raise e
     finally:
         cursor.close()
-

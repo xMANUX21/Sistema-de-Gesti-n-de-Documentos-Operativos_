@@ -15,7 +15,8 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
-
+    department: Optional[str]=None
+    
 class UserResponse(BaseModel):
     id: int
     name: str

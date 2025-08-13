@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from app.routes.auth_routes import router as loginRouter
 from app.routes.users.UsersRoutes import router as userRouter
 from app.routes.documents.document_routes import router as documentRouter
-
+from app.routes.users.AdminRoutes import router as adminRouter
 
 app = FastAPI()
 
@@ -12,6 +12,8 @@ app = FastAPI()
 app.include_router(loginRouter, prefix="/api/auth")
 app.include_router(userRouter,prefix="/api/users")
 app.include_router(documentRouter, prefix="/api/documents")
+app.include_router(adminRouter, prefix="/api/admin")
+
 
 
 @app.get("/")

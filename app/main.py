@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends
 # from app.auth.controller import router as auth_router
 from app.routes.auth_routes import router as loginRouter
 from app.routes.users.UsersRoutes import router as userRouter
-from app.routes.documents.document_routes import router as documentRouter
+from app.routes.documents.DocumentRoutes import router as documentRouter
 from app.routes.users.AdminRoutes import router as adminRouter
 
 app = FastAPI()

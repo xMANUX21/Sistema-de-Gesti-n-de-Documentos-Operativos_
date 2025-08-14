@@ -1,61 +1,69 @@
 import pdfplumber
 import pandas as pd
 from typing import Dict
+import json
 
-def format_table_as_text(table):
-    """
-    aca convierte una lista de listas (tabla) en texto alineado por columnas
-    """
-    if not table:
+def normalize_number(val: str) -> str:
+    """Limpia valores numericos ($400,000 → 400000)"""
+    if not val:
         return ""
-    df = pd.DataFrame(table).fillna("").astype(str)
-    col_widths = [df[col].map(len).max() for col in df.columns]
-    lines = []
-    for _, row in df.iterrows():
-        line = "  ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
-        lines.append(line)
-    return "\n".join(lines)
+    return val.replace("$", "").replace(",", "").strip()
 
-def process_pdf(pdf_path: str) -> Dict[str, str]:
+def format_bbox(bbox):
+    """Convierte bbox a lista de floats"""
+    return [float(x) for x in bbox]
+
+def process_pdf_with_metadata(pdf_path: str) -> Dict:
     """
-    aca podemos pasar un PDF y devolveria un texto con:
-     Titulo principal de la primera pagina
-     Tablas con sus titulos
-     Columnas alineadas
-     Separacion por pagina
-    Funcionaria con PDFs donde las tablas pueden estar separadas del titulo
+    Procesa un PDF y devuelve:
+    - text: Texto extraido
+    - tables: Una lista de tablas con headers y rows
     """
-    result_text = ""
+    result = {
+        "text": "",
+        "tables": []
+    }
 
     with pdfplumber.open(pdf_path) as pdf:
         for page_idx, page in enumerate(pdf.pages, start=1):
-            # Extrae las lineas de texto
-            lines = (page.extract_text() or "").split("\n")
+            # Texto
+            text_lines = (page.extract_text() or "").split("\n")
+            if page_idx == 1 and text_lines:
+                result["text"] += text_lines[0].strip() + "\n\n"
 
-            # Agrega titulo principal en la primera pagina
-            if page_idx == 1 and lines:
-                result_text += lines[0].strip() + "\n\n"
-
-            # Extrae tablas detectadas por el pdfplumber
+            # Extraemos tablas
             tables = page.extract_tables()
-            for table in tables:
-                # Detecta el   titulo de la tabla (la linea que va antes de la cabecera)
-                header_first_cell = str(table[0][0]).strip() if table and table[0] else ""
-                title_line = None
-                for i, line in enumerate(lines):
-                    if header_first_cell and header_first_cell in line:
-                        if i > 0:
-                            title_line = lines[i - 1].strip()
-                        break
+            for t_idx, table in enumerate(tables, start=1):
+                bbox = format_bbox(page.bbox)
+                n_rows = len(table)
+                n_cols = len(table[0]) if table else 0
 
-                # Agrega un titulo si existe
-                if title_line:
-                    result_text += title_line + "\n"
+                # Titulo 
+                base_title = text_lines[0].strip() if text_lines else f"Tabla {t_idx}"
+                title_guess = f"{base_title} #{t_idx}"
 
-                # Agrega la ya tabla formateada
-                result_text += format_table_as_text(table) + "\n\n"
+                # Pasar a DataFrame
+                df = pd.DataFrame(table).fillna("").astype(str)
+                headers = df.iloc[0].tolist() if not df.empty else []
+                rows = df.iloc[1:].values.tolist() if len(df) > 1 else []
 
-            # Marca un fin de la pagina
-            result_text += f"--- Fin pagina {page_idx} ---\n\n"
+                # Normalizamo
+                norm_headers = [h.strip() for h in headers]
+                norm_rows = [[normalize_number(c) for c in r] for r in rows]
 
-    return {"text": result_text}
+                result["tables"].append({
+                    "tableId": f"t{t_idx}",
+                    "page": page_idx,
+                    "bbox": bbox,
+                    "nRows": n_rows,
+                    "nCols": n_cols,
+                    "detection": "auto",
+                    "confidence": 0.9,
+                    "titleGuess": title_guess,
+                    "headers": norm_headers,
+                    "rows": norm_rows
+                })
+
+            result["text"] += f"--- Fin página {page_idx} ---\n\n"
+
+    return result

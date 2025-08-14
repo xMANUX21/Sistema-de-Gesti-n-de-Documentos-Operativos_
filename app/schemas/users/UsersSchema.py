@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+    department: Optional[str]=None
 
 class ResetPassword(BaseModel):
     token: str

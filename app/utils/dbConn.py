@@ -79,7 +79,8 @@ def create_db_and_tables():
             id INT AUTO_INCREMENT PRIMARY KEY,
             nombre VARCHAR(255) NOT NULL,
             contenido LONGTEXT NOT NULL,
-            fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            department VARCHAR(255) NOT NULL
         );
         """
         cursor.execute(create_documents_sql)
@@ -125,9 +126,9 @@ def create_db_and_tables():
             from .security import hash_password #Lo importamos aqui para que no hayan comflictos ya que importan ambos
             hashed_password = hash_password(DEFAULT_ADMIN_PASSWORD)
             cursor.execute("""
-                INSERT INTO users (name, email, password_hash, role)
-                VALUES (%s, %s, %s, %s)
-                 """, ("Administrador", DEFAULT_ADMIN_EMAIL, hashed_password, "admin"))
+                INSERT INTO users (name, email, password_hash, role, department)
+                VALUES (%s, %s, %s, %s, %s)
+                 """, ("Administrador", DEFAULT_ADMIN_EMAIL, hashed_password, "admin", "Bogota D.C"))
             print(f" Se creo el usuario admin ==> email='{DEFAULT_ADMIN_EMAIL}', password='{DEFAULT_ADMIN_PASSWORD}'")
 
 

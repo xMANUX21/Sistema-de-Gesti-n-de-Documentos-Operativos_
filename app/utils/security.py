@@ -78,7 +78,7 @@ def get_current_user(
         
         # Buscar al usuario en la base de datos por su ID
         cursor = db_connection.cursor(dictionary=True)
-        sql_select = "SELECT id, name, email, role FROM users WHERE id = %s"
+        sql_select = "SELECT id, name, email, role, department FROM users WHERE id = %s"
         cursor.execute(sql_select, (user_id,))
         user_data = cursor.fetchone()
         cursor.close()

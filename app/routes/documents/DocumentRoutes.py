@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+from app.utils.security import get_current_user
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query
 from app.utils.dbConn import get_db_connection
 from app.utils.PdfProcessor import process_pdf_with_metadata
@@ -18,7 +19,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("/documents/upload")
 def upload_document(
     file: UploadFile = File(...),
-    connection: MySQLConnection = Depends(get_db_connection)
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
 ):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
@@ -30,15 +32,15 @@ def upload_document(
     try:
         cursor = connection.cursor()
 
-        # Procesar PDF -> texto + tablas con metadatos
+        # Procesar PDF
         pdf_data = process_pdf_with_metadata(file_path)
         contenido = pdf_data.get("text", "")
         tablas = pdf_data.get("tables", [])
 
-        # Guardar documento
+        # Guardar documento con departamento
         cursor.execute(
-            "INSERT INTO documentos (nombre, contenido) VALUES (%s, %s)",
-            (file.filename, contenido)
+            "INSERT INTO documentos (nombre, contenido, department) VALUES (%s, %s, %s)",
+            (file.filename, contenido, current_user.department)
         )
         document_id = cursor.lastrowid
 
@@ -63,7 +65,6 @@ def upload_document(
             ))
 
         connection.commit()
-
         return {
             "message": "Documento y tablas guardados correctamente",
             "document_id": document_id,
@@ -80,23 +81,47 @@ def upload_document(
 
 
 @router.get("/documents/")
-def list_documents(connection: MySQLConnection = Depends(get_db_connection)):
+def list_documents(
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
+):
     cursor = connection.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT id, nombre, fecha_subida
-        FROM documentos
-        ORDER BY fecha_subida DESC
-    """)
+    if current_user.role == "admin":
+        cursor.execute("""
+            SELECT id, nombre, fecha_subida, department
+            FROM documentos
+            ORDER BY fecha_subida DESC
+        """)
+    else:
+        cursor.execute("""
+            SELECT id, nombre, fecha_subida, department
+            FROM documentos
+            WHERE department = %s
+            ORDER BY fecha_subida DESC
+        """, (current_user.department,))
     documentos = cursor.fetchall()
     cursor.close()
     return {"documentos": documentos}
 
 
 @router.get("/documents/{document_id}")
-def get_document(document_id: int, connection: MySQLConnection = Depends(get_db_connection)):
+def get_document(
+    document_id: int,
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
+):
     cursor = connection.cursor(dictionary=True)
+
+    # Validar acceso
+    if current_user.role != "admin":
+        cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
+        row = cursor.fetchone()
+        if not row or row.department != current_user.department:
+            cursor.close()
+            raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
+
     cursor.execute("""
-        SELECT id, nombre, contenido, fecha_subida
+        SELECT id, nombre, contenido, fecha_subida, department
         FROM documentos
         WHERE id = %s
     """, (document_id,))
@@ -110,8 +135,21 @@ def get_document(document_id: int, connection: MySQLConnection = Depends(get_db_
 
 
 @router.delete("/documents/{document_id}")
-def delete_document(document_id: int, connection: MySQLConnection = Depends(get_db_connection)):
-    cursor = connection.cursor()
+def delete_document(
+    document_id: int,
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
+):
+    cursor = connection.cursor(dictionary=True)
+
+    # Validar acceso
+    if current_user.role != "admin":
+        cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
+        row = cursor.fetchone()
+        if not row or row.department != current_user.department:
+            cursor.close()
+            raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
+
     cursor.execute("DELETE FROM documentos WHERE id = %s", (document_id,))
     connection.commit()
     deleted = cursor.rowcount
@@ -125,17 +163,26 @@ def delete_document(document_id: int, connection: MySQLConnection = Depends(get_
 # ===============================
 #  TABLAS
 # ===============================
-
 @router.get("/tables/search")
 def search_in_tables(
     q: str = Query(..., description="Texto a buscar dentro de las tablas"),
-    connection: MySQLConnection = Depends(get_db_connection)
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
 ):
     cursor = connection.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT document_id, table_uid, title_guess, headers, rows_data
-        FROM document_tables
-    """)
+    if current_user.role == "admin":
+        cursor.execute("""
+            SELECT dt.document_id, dt.table_uid, dt.title_guess, dt.headers, dt.rows_data
+            FROM document_tables dt
+            JOIN documentos d ON dt.document_id = d.id
+        """)
+    else:
+        cursor.execute("""
+            SELECT dt.document_id, dt.table_uid, dt.title_guess, dt.headers, dt.rows_data
+            FROM document_tables dt
+            JOIN documentos d ON dt.document_id = d.id
+            WHERE d.department = %s
+        """, (current_user.department,))
     tables = cursor.fetchall()
     cursor.close()
 
@@ -156,10 +203,22 @@ def search_in_tables(
     return {"results": resultados}
 
 
-# 2) Luego la lista por documento
 @router.get("/tables/{document_id}")
-def list_document_tables(document_id: int, connection: MySQLConnection = Depends(get_db_connection)):
+def list_document_tables(
+    document_id: int,
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
+):
     cursor = connection.cursor(dictionary=True)
+
+    # Validar acceso
+    if current_user.role != "admin":
+        cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
+        row = cursor.fetchone()
+        if not row or row.department != current_user.department:
+            cursor.close()
+            raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
+
     cursor.execute("""
         SELECT table_uid, page, title_guess
         FROM document_tables
@@ -176,10 +235,23 @@ def list_document_tables(document_id: int, connection: MySQLConnection = Depends
     return {"documentId": document_id, "count": len(tables), "items": tables}
 
 
-# 3) Y por último la tabla específica
 @router.get("/tables/{document_id}/{table_uid}")
-def get_table_content(document_id: int, table_uid: str, connection: MySQLConnection = Depends(get_db_connection)):
+def get_table_content(
+    document_id: int,
+    table_uid: str,
+    connection: MySQLConnection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user)
+):
     cursor = connection.cursor(dictionary=True)
+
+    # Validar acceso
+    if current_user.role != "admin":
+        cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
+        row = cursor.fetchone()
+        if not row or row.department != current_user.department:
+            cursor.close()
+            raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
+
     cursor.execute("""
         SELECT table_uid, page, title_guess, headers, rows_data
         FROM document_tables

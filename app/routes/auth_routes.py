@@ -42,13 +42,13 @@ def register_user(user_data: UserCreate = Body(...), db_connection: mysql.connec
         hashed_password = hash_password(user_data.password)
 
         # 4. Insertar el nuevo usuario en la base de datos
-        sql_insert = "INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql_insert, (user_data.name, user_data.email, hashed_password, assigned_role))
+        sql_insert = "INSERT INTO users (name, email, password_hash, role, department) VALUES (%s, %s, %s, %s, %s)"
+        cursor.execute(sql_insert, (user_data.name, user_data.email, hashed_password, assigned_role, user_data.department))
         db_connection.commit()
         
         # 5. Obtener los datos del usuario recien creado para la respuesta
         last_id = cursor.lastrowid
-        sql_select_new_user = "SELECT id, name, email, role FROM users WHERE id = %s"
+        sql_select_new_user = "SELECT id, name, email, role, department FROM users WHERE id = %s"
         cursor.execute(sql_select_new_user, (last_id,))
         new_user_db_data = cursor.fetchone()
         

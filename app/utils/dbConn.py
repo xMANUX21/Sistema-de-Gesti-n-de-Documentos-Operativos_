@@ -64,8 +64,28 @@ def create_db_and_tables():
         """
         cursor.execute(create_documents_sql)
 
+        # === Tabla de metadatos de tablas extraídas ===
+        create_tables_meta_sql = """
+        CREATE TABLE IF NOT EXISTS document_tables (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            document_id INT NOT NULL,
+            table_uid VARCHAR(50) NOT NULL,
+            page INT NOT NULL,
+            bbox TEXT,
+            n_rows INT,
+            n_cols INT,
+            detection VARCHAR(20),
+            confidence FLOAT,
+            title_guess TEXT,
+            headers JSON,
+            rows_data JSON,
+            FOREIGN KEY (document_id) REFERENCES documentos(id) ON DELETE CASCADE
+        );
+        """
+        cursor.execute(create_tables_meta_sql)
+
         startup_db_connection.commit()
-        print("Tablas 'users' y 'documentos' verificadas/creadas exitosamente.")
+        print("Tablas 'users', 'documentos' y 'document_tables' verificadas/creadas exitosamente.")
         cursor.close()
 
     except mysql.connector.Error as err:

@@ -3,7 +3,7 @@ import json
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query
 from app.utils.dbConn import get_db_connection
-from app.utils.pdf_processor import process_pdf_with_metadata
+from app.utils.PdfProcessor import process_pdf_with_metadata
 from mysql.connector import MySQLConnection
 
 router = APIRouter(

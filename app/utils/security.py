@@ -8,6 +8,7 @@ from .dbConn import get_db_connection
 from fastapi.security import OAuth2PasswordBearer
 import mysql.connector
 from passlib.context import CryptContext
+import bcrypt
 
 load_dotenv()
 
@@ -23,6 +24,12 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+#Hashea el token antes de guardarlo en la base de datos.
+def hash_token(token: str) -> str:
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(token.encode('utf-8'), salt).decode('utf-8')
+
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()

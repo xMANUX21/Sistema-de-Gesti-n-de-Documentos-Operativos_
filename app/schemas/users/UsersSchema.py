@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from enum import Enum
 from sqlmodel import Field, SQLModel
 from typing import Optional
@@ -15,9 +15,14 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
-
+    department: Optional[str]=None
+    
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
     role: str
+
+class ResetPassword(BaseModel):
+    token: str
+    password: str

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ user }) => {
   const navigate = useNavigate();
-
+  
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     navigate('/');
@@ -27,10 +27,14 @@ const Sidebar = ({ user }) => {
           {isAdmin && (
             <>
               <li>
-                <Link to="/admin/users">Usuarios</Link>
+                <Link to="/admin/all-users">Usuarios</Link>
               </li>
               <li>
                 <Link to="/admin/register">Registrar Usuario</Link>
+              </li>
+              <li>
+              
+                <Link to="/admin/users">Usuarios Bloqueados</Link>
               </li>
             </>
           )}

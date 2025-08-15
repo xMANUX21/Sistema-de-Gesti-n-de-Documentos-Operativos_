@@ -22,7 +22,7 @@ const Sidebar = ({ user }) => {
             <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
-            <Link to="/documents">Documentos</Link>
+            <Link to="/documents/upload">Documentos</Link>
           </li>
           {isAdmin && (
             <>

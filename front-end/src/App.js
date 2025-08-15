@@ -8,6 +8,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Users from './components/Users';
 import AdminRegister from './components/AdminRegister'; 
 import AdminUsers from './components/AdminUsers';   
+import UploadDocument from './components/UploadDocument';
+import Documents from './components/Documents';
 
 
 import './App.css'; // estilos de App.css
@@ -58,6 +60,16 @@ function App() {
               <AdminUsers />
             </ProtectedRoute>
           } 
+        />
+
+        {/* Subida de los Doucmentos PDF*/}
+        <Route
+          path='/documents/upload'
+          element={
+            <ProtectedRoute>
+              <Documents />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>

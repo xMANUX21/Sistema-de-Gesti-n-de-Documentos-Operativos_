@@ -36,7 +36,7 @@ const Dashboard = () => {
         <h2>Bienvenido, {user.name}!</h2>
         <p>Tu rol es: {user.role}</p>
         <p>Has iniciado sesión con éxito.</p>
-        {/* Agrega el botón de cerrar sesión aquí */}
+       
         <button onClick={handleLogout}>Cerrar Sesión</button> 
       </main>
     </div>

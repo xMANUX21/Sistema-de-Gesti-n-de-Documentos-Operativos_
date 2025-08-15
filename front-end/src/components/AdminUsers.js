@@ -31,7 +31,7 @@ const AdminUsers = () => {
     // para obtener todos los usuarios del backend
     const fetchAllUsers = async () => {
         try {
-            const response = await api.get('/users/');
+            const response = await api.get('/users');
             setUsers(response.data.users);
         } catch (err) {
             setError('No tienes permisos para ver esta página o hubo un error.');
@@ -55,11 +55,12 @@ const AdminUsers = () => {
     }
 
     //  para renderizar el componente
-    return (
+     return (
         <div className="app-layout">
             <Sidebar user={user} />
             <main className="content">
-                <div>
+                {/* Agrega la clase al div que contiene la tabla */}
+                <div className="users-table-container">
                     <h2>Todos los Usuarios</h2>
                     {message && <p className="info-message">{message}</p>}
                     <table>

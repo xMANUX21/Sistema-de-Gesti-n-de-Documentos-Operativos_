@@ -9,6 +9,9 @@ import Users from './components/Users';
 import AdminRegister from './components/AdminRegister'; 
 import AdminUsers from './components/AdminUsers';   
 
+
+import './App.css'; // estilos de App.css
+
 function App() {
   return (
     <Router>
@@ -27,7 +30,7 @@ function App() {
           } 
         />
         
-        {/* Ruta para Usuarios Bloqueados (que usa el componente Users) */}
+        {/* Ruta para Usuarios Bloqueados  */}
         <Route 
           path="/admin/users" 
           element={
@@ -37,7 +40,7 @@ function App() {
           } 
         />
 
-        {/* Agrega la ruta para el registro de usuarios por el administrador */}
+        {/*  para el registro de usuarios por el administrador */}
         <Route 
           path="/admin/register" 
           element={
@@ -47,7 +50,7 @@ function App() {
           } 
         />
         
-        {/* Agrega la ruta para la gestión de todos los usuarios */}
+        {/*  para la gestión de todos los usuarios */}
         <Route 
           path="/admin/all-users" 
           element={

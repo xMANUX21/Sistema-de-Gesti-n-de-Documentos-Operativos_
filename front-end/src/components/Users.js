@@ -50,7 +50,7 @@ const Users = () => {
         }
     };
 
-    // 4. Cargar la lista de usuarios cuando el componente se monta
+    // Cargar la lista de usuarios cuando el componente se monta
     useEffect(() => {
         fetchLockedUsers();
     }, []);
@@ -70,7 +70,8 @@ const Users = () => {
         <div className="app-layout">
             <Sidebar user={user} />
             <main className="content">
-                <div className="users-container">
+                {/*  div a users-table-container' */}
+                <div className="users-table-container"> 
                     <h2>Usuarios Bloqueados</h2>
                     {message && <p className="info-message">{message}</p>}
                     <table>

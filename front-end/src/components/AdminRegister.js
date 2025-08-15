@@ -62,36 +62,38 @@ const AdminRegister = () => {
     }
 
     return (
-        <div className="app-layout">
-            <Sidebar user={user} />
-            <main className="content">
-                <div>
-                    <h2>Registrar Nuevo Usuario</h2>
-                    <form onSubmit={handleSubmit}>
-                        <div>
-                            <label>Nombre:</label>
-                            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-                        </div>
-                        <div>
-                            <label>Email:</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-                        </div>
-                        <div>
-                            <label>Contraseña:</label>
-                            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-                        </div>
-                        <div>
-                            <label>Departamento:</label>
-                            <input type="text" name="department" value={formData.department} onChange={handleChange} required />
-                        </div>
-                        <button type="submit">Registrar</button>
-                    </form>
-                    {message && <p className="success-message">{message}</p>}
-                    {error && <p className="error-message">{error}</p>}
-                </div>
-            </main>
-        </div>
-    );
+    <div className="app-layout">
+        <Sidebar user={user} />
+        <main className="content">
+            {/*  la clase  principal del formulario */}
+            <div className="register-form-container">
+                <h2>Registrar Nuevo Usuario</h2>
+                <form onSubmit={handleSubmit}>
+                    <div>
+                        <label>Nombre:</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                    </div>
+                    <div>
+                        <label>Email:</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                    </div>
+                    <div>
+                        <label>Contraseña:</label>
+                        <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+                    </div>
+                    <div>
+                        <label>Departamento:</label>
+                        <input type="text" name="department" value={formData.department} onChange={handleChange} required />
+                    </div>
+
+                    <button type="submit">Registrar</button>
+                </form>
+                {message && <p className="success-message">{message}</p>}
+                {error && <p className="error-message">{error}</p>}
+            </div>
+        </main>
+    </div>
+);
 };
 
 export default AdminRegister;

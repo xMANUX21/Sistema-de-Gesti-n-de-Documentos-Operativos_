@@ -57,7 +57,7 @@ def increase_failed_attempts(db_connection: mysql.connector.MySQLConnection, use
             cursor.execute(sql_update, (new_attempts, user_id))
             
             # --- Enviar email al admin ---
-            unlock_link = f"http://{db_host}:{front_port}/admin/dashboard" 
+            unlock_link = f"http://{db_host}:{front_port}/admin/users" 
             send_unlock_email(user_info, unlock_link)
             
         else:

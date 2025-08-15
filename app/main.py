@@ -5,8 +5,23 @@ from app.routes.auth_routes import router as loginRouter
 from app.routes.users.UsersRoutes import router as userRouter
 from app.routes.documents.DocumentRoutes import router as documentRouter
 from app.routes.users.AdminRoutes import router as adminRouter
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Configuración de CORS
+origins = [
+    "http://localhost:3000",  # El origen del frontend
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # app.include_router(auth_router, prefix="/api/auth")
 app.include_router(loginRouter, prefix="/api/auth")

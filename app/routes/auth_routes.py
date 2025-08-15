@@ -70,7 +70,7 @@ def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depe
     
     try:
         # 1. Buscar usuario por email y obtener los campos de bloqueo
-        sql_select = "SELECT id, email, password_hash, role, is_locked, failed_attempts FROM users WHERE email = %s"
+        sql_select = "SELECT id, email, password_hash, role, is_locked, failed_attempts ,name FROM users WHERE email = %s"
         cursor.execute(sql_select, (data.email,))
         user_db = cursor.fetchone()
         # 2. Verificar si el usuario existe
@@ -89,7 +89,9 @@ def login(data: UserLogin, db_connection: mysql.connector.MySQLConnection = Depe
         # Generar y devolver el token JWT (aquí no hay reseteo)
         token_payload = {
             "sub": str(user_db["id"]),
-            "role": user_db["role"]
+            "role": user_db["role"],
+            "email": user_db["email"],
+            "name": user_db["name"]
         }
         token = create_access_token(token_payload)
         

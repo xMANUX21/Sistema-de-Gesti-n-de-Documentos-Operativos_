@@ -1,0 +1,265 @@
+/* Estilos para el contenedor del formulario de login */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+  background-color: #f0f2f5; 
+}
+
+/* Estilos para el formulario en sí */
+.login-container form {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 8px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para un efecto 3D */
+  width: 100%;
+  max-width: 400px; 
+  box-sizing: border-box;
+}
+
+/* Estilos para los títulos del formulario */
+.login-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Estilos para los contenedores de las etiquetas y los inputs */
+.login-container div {
+  margin-bottom: 15px;
+}
+
+/* Estilos para las etiquetas */
+.login-container label {
+  display: block; /* Muestra las etiquetas en su propia línea */
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+/* Estilos para los campos de entrada de texto y contraseña */
+.login-container input[type="email"],
+.login-container input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box; /* Para que el padding no afecte el ancho total */
+}
+
+/* Estilos para el botón de entrada */
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+  background-color: #0056b3;
+}
+
+/* Estilos para el enlace */
+.login-container a {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.login-container a:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para el mensaje de error */
+.error-message {
+  color: #d9534f;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+
+
+/* Estilos para el layout general */
+.app-layout {
+  display: flex; /*  para alinear el sidebar y el contenido */
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+}
+
+/* Estilos para el sidebar */
+.sidebar {
+  width: 200px; /* Ancho fijo  */
+  background-color: #f0f2f5; /*  color de fondo  */
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Sombra para dar profundidad */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  margin-bottom: 20px;
+}
+
+.sidebar-nav ul {
+  list-style: none; /* Quita los puntos  */
+  padding: 0;
+}
+
+.sidebar-nav li {
+  margin-bottom: 15px;
+}
+
+.sidebar-nav a {
+  text-decoration: none; /* Quita el subrayado  */
+  color: #333; /* Color de texto oscuro */
+  font-weight: bold;
+}
+
+/* Estilos para el contenido principal */
+.content {
+  flex-grow: 1; /* El contenido ocupará el espacio restante */
+  padding: 40px;
+  background-color: #fff; /* Fondo blanco */
+}
+
+
+/* Estilos para los botones */
+button,
+.sidebar-nav a.button { 
+  background-color: #007bff; 
+  color: #fff; 
+  border: none;
+  border-radius: 5px; /* Bordes redondeados */
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease; /* Transición suave  */
+}
+
+button:hover,
+.sidebar-nav a.button:hover {
+  background-color: #0056b3; 
+}
+
+/* Estilos para los títulos */
+h2 {
+  color: #333;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+
+/* Estilos para el contenedor del formulario */
+.register-form-container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 40px auto; /* Centra el formulario */
+}
+
+/* Estilos para el encabezado del formulario */
+.register-form-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+/* Estilos para los campos de entrada */
+.register-form-container input[type="text"],
+.register-form-container input[type="email"],
+.register-form-container input[type="password"],
+.register-form-container select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    margin-top: 5px;
+}
+
+/* Estilos para los mensajes de éxito y error */
+.success-message {
+    color: #28a745;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+
+/* Estilos para el contenedor de las tablas de usuario */
+.users-table-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 40px auto; /* Centra el contenedor */
+    max-width: 90%; /* Limita el ancho para mejor lectura */
+    overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+}
+
+/* Estilos para la tabla */
+.users-table-container table {
+    width: 100%;
+    border-collapse: collapse; /* Elimina los espacios entre las celdas del borde */
+    margin-top: 20px;
+}
+
+/* Estilos para las cabeceras de la tabla */
+.users-table-container th {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Estilos para las filas del cuerpo de la tabla */
+.users-table-container td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+/* Estilo para las filas impares  */
+.users-table-container tbody tr:nth-child(odd) {
+    background-color: #f8f9fa;
+}
+
+/* Efecto al pasar el mouse por encima de las filas */
+.users-table-container tbody tr:hover {
+    background-color: #e2e6ea;
+}
+
+/* Estilo para los botones dentro de las tablas  */
+.users-table-container td button {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border-radius: 4px;
+}

@@ -116,7 +116,7 @@ def get_document(
     if current_user.role != "admin":
         cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
         row = cursor.fetchone()
-        if not row or row.department != current_user.department:
+        if not row or row["department"] != current_user.department:
             cursor.close()
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 
@@ -146,7 +146,7 @@ def delete_document(
     if current_user.role != "admin":
         cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
         row = cursor.fetchone()
-        if not row or row.department != current_user.department:
+        if not row or row["department"] != current_user.department:
             cursor.close()
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 
@@ -215,7 +215,7 @@ def list_document_tables(
     if current_user.role != "admin":
         cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
         row = cursor.fetchone()
-        if not row or row.department != current_user.department:
+        if not row or row["department"] != current_user.department:
             cursor.close()
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 
@@ -248,7 +248,7 @@ def get_table_content(
     if current_user.role != "admin":
         cursor.execute("SELECT department FROM documentos WHERE id = %s", (document_id,))
         row = cursor.fetchone()
-        if not row or row.department != current_user.department:
+        if not row or row["department"] != current_user.department:
             cursor.close()
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 

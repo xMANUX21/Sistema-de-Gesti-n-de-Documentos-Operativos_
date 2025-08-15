@@ -39,8 +39,8 @@ def upload_document(
 
         # Guardar documento con departamento
         cursor.execute(
-            "INSERT INTO documentos (nombre, contenido, department) VALUES (%s, %s, %s)",
-            (file.filename, contenido, current_user.department)
+            "INSERT INTO documentos (nombre, contenido, department, uploaded_by) VALUES (%s, %s, %s, %s)",
+            (file.filename, contenido, current_user.department, current_user.email)
         )
         document_id = cursor.lastrowid
 
@@ -86,19 +86,25 @@ def list_documents(
     current_user: dict = Depends(get_current_user)
 ):
     cursor = connection.cursor(dictionary=True)
+    
     if current_user.role == "admin":
         cursor.execute("""
-            SELECT id, nombre, fecha_subida, department
-            FROM documentos
-            ORDER BY fecha_subida DESC
+            SELECT d.id, d.nombre, d.fecha_subida, d.department, 
+                   COALESCE(u.email, '') AS uploaded_by
+            FROM documentos d
+            LEFT JOIN users u ON d.uploaded_by = u.id
+            ORDER BY d.fecha_subida DESC
         """)
     else:
         cursor.execute("""
-            SELECT id, nombre, fecha_subida, department
-            FROM documentos
-            WHERE department = %s
-            ORDER BY fecha_subida DESC
+            SELECT d.id, d.nombre, d.fecha_subida, d.department, 
+                   COALESCE(u.email, '') AS uploaded_by
+            FROM documentos d
+            LEFT JOIN users u ON d.uploaded_by = u.id
+            WHERE d.department = %s
+            ORDER BY d.fecha_subida DESC
         """, (current_user.department,))
+    
     documentos = cursor.fetchall()
     cursor.close()
     return {"documentos": documentos}
@@ -121,7 +127,7 @@ def get_document(
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 
     cursor.execute("""
-        SELECT id, nombre, contenido, fecha_subida, department
+        SELECT id, nombre, contenido, fecha_subida, department, uploaded_by
         FROM documentos
         WHERE id = %s
     """, (document_id,))

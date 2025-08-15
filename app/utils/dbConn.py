@@ -80,7 +80,8 @@ def create_db_and_tables():
             nombre VARCHAR(255) NOT NULL,
             contenido LONGTEXT NOT NULL,
             fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            department VARCHAR(255) NOT NULL
+            department VARCHAR(255) NOT NULL,
+            uploaded_by VARCHAR(255) NOT NULL
         );
         """
         cursor.execute(create_documents_sql)

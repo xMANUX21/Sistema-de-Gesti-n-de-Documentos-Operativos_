@@ -4,7 +4,7 @@ import shutil
 from app.utils.security import get_current_user
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query
 from app.utils.dbConn import get_db_connection
-from app.utils.PdfProcessor import process_pdf_with_metadata
+from app.utils.PdfProcessor import process_pdf_with_metadata, sanitize_text
 from mysql.connector import MySQLConnection
 
 router = APIRouter(tags=["Documents"])
@@ -92,7 +92,7 @@ def list_documents(
             SELECT d.id, d.nombre, d.fecha_subida, d.department, 
                    COALESCE(u.email, '') AS uploaded_by
             FROM documentos d
-            LEFT JOIN users u ON d.uploaded_by = u.id
+            LEFT JOIN users u ON d.uploaded_by = u.email
             ORDER BY d.fecha_subida DESC
         """)
     else:
@@ -100,7 +100,7 @@ def list_documents(
             SELECT d.id, d.nombre, d.fecha_subida, d.department, 
                    COALESCE(u.email, '') AS uploaded_by
             FROM documentos d
-            LEFT JOIN users u ON d.uploaded_by = u.id
+            LEFT JOIN users u ON d.uploaded_by = u.email
             WHERE d.department = %s
             ORDER BY d.fecha_subida DESC
         """, (current_user.department,))
@@ -127,9 +127,11 @@ def get_document(
             raise HTTPException(status_code=403, detail="No tienes acceso a este documento")
 
     cursor.execute("""
-        SELECT id, nombre, contenido, fecha_subida, department, uploaded_by
-        FROM documentos
-        WHERE id = %s
+        SELECT d.id, d.nombre, d.contenido, d.fecha_subida, d.department,
+        COALESCE(u.name, d.uploaded_by) AS uploaded_by
+        FROM documentos d
+        LEFT JOIN users u ON d.uploaded_by = u.email           
+        WHERE d.id = %s
     """, (document_id,))
     documento = cursor.fetchone()
     cursor.close()
@@ -171,42 +173,52 @@ def delete_document(
 # ===============================
 @router.get("/tables/search")
 def search_in_tables(
-    q: str = Query(..., description="Texto a buscar dentro de las tablas"),
+    q: str = Query(..., description="Texto a buscar"),
     connection: MySQLConnection = Depends(get_db_connection),
     current_user: dict = Depends(get_current_user)
 ):
     cursor = connection.cursor(dictionary=True)
-    if current_user.role == "admin":
-        cursor.execute("""
-            SELECT dt.document_id, dt.table_uid, dt.title_guess, dt.headers, dt.rows_data
+    try:
+        q_clean = sanitize_text(q)
+
+        sql = """
+            SELECT d.id AS document_id,
+                   dt.table_uid,
+                   dt.title_guess,
+                   dt.headers,
+                   dt.rows_data
             FROM document_tables dt
             JOIN documentos d ON dt.document_id = d.id
-        """)
-    else:
-        cursor.execute("""
-            SELECT dt.document_id, dt.table_uid, dt.title_guess, dt.headers, dt.rows_data
-            FROM document_tables dt
-            JOIN documentos d ON dt.document_id = d.id
-            WHERE d.department = %s
-        """, (current_user.department,))
-    tables = cursor.fetchall()
-    cursor.close()
+        """
+        params = ()
+        if current_user.role != "admin":
+            sql += " WHERE d.department = %s"
+            params = (current_user.department,)
 
-    resultados = []
-    for t in tables:
-        if q.lower() in str(t.get("rows_data", "")).lower():
-            resultados.append({
-                "document_id": t["document_id"],
-                "table_uid": t["table_uid"],
-                "title_guess": t["title_guess"],
-                "headers": json.loads(t["headers"]) if t.get("headers") else [],
-                "rows": json.loads(t["rows_data"]) if t.get("rows_data") else []
-            })
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
 
-    if not resultados:
-        raise HTTPException(status_code=404, detail="No se encontraron coincidencias")
+        results = []
+        for r in rows:
+            haystack = sanitize_text(
+                str(r["title_guess"] or "") +
+                json.dumps(r["headers"], ensure_ascii=False) +
+                json.dumps(r["rows_data"], ensure_ascii=False)
+            )
+            if q_clean in haystack:
+                results.append({
+                    "document_id": r["document_id"],
+                    "table_uid": r["table_uid"],
+                    "title_guess": r["title_guess"],
+                    "headers": json.loads(r["headers"]) or [],
+                    "rows": json.loads(r["rows_data"]) or []
+                })
 
-    return {"results": resultados}
+        if not results:
+            raise HTTPException(status_code=404, detail="No se encontraron coincidencias")
+        return {"results": results}
+    finally:
+        cursor.close()
 
 
 @router.get("/tables/{document_id}")

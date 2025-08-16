@@ -2,6 +2,7 @@ import pdfplumber
 import pandas as pd
 from typing import Dict
 import json
+import unicodedata
 
 def normalize_number(val: str) -> str:
     """Limpia valores numericos ($400,000 → 400000)"""
@@ -12,6 +13,12 @@ def normalize_number(val: str) -> str:
 def format_bbox(bbox):
     """Convierte bbox a lista de floats"""
     return [float(x) for x in bbox]
+
+def sanitize_text(text: str) -> str:
+    """Quita tildes, puntos, espacios y pasa a minúsculas"""
+    txt = unicodedata.normalize("NFKD", str(text))
+    txt = txt.encode("ascii", "ignore").decode("ascii")
+    return txt.lower().replace(" ", "").replace(".", "")
 
 def process_pdf_with_metadata(pdf_path: str) -> Dict:
     """

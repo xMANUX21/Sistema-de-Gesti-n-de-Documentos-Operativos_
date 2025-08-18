@@ -3,7 +3,7 @@ import mysql.connector
 from dotenv import load_dotenv
 from fastapi import Depends
 from typing import Generator
-from mysql.connector import Error
+from mysql.connector import Error 
 load_dotenv()
 
 db_username = os.getenv('USER_DB')
@@ -17,21 +17,25 @@ DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")
 #Con esta funcion verificamos si hay una base de datos ya creada si no es asi la hara con el nombre de dbname que tengamos en nuestro .env 
 def init_database():
     try:
-        # Conexion sin DB
-        conn_temp = mysql.connector.connect( #Nos conectamos al sevidor de MYSQL
+        conn_temp = mysql.connector.connect(
             host=db_host,
             user=db_username,
-            password=db_password
+            password=db_password,
+            connection_timeout=5,
+            use_pure=True
         )
-        cursor_temp = conn_temp.cursor()#Cursor en donde vamos a darle instrucciones ya en el servidor conectado
-        cursor_temp.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}") #Se ejecuta este comando
-        conn_temp.commit()#Guardamos el cambio
+        print("init_database: conexión establecida")
+        cursor_temp = conn_temp.cursor()
+        print("init_database: creando DB si no existe")
+        cursor_temp.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+        conn_temp.commit()
         cursor_temp.close()
-        conn_temp.close() #Cerramos el servidor y cursor temporal 
-        print(f" Base de datos '{db_name}' verificada/creada.")
+        conn_temp.close()
+        print(f"Base de datos '{db_name}' verificada/creada.")
     except Error as e:
-        print(f" Error creando/verificando base de datos: {e}")
+        print(f"Error creando/verificando base de datos: {e}")
 
+        
 #  Dependencia para obtener conexión a MySQL
 def get_db_connection() -> Generator[mysql.connector.MySQLConnection, None, None]:
     connection = mysql.connector.connect(
@@ -54,7 +58,9 @@ def create_db_and_tables():
             host=db_host,
             user=db_username,
             password=db_password,
-            database=db_name
+            database=db_name,
+            connection_timeout=5,
+            use_pure=True
         )
         cursor = startup_db_connection.cursor()
 

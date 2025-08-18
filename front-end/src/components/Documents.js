@@ -11,27 +11,31 @@ const Documents = () => {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [file, setFile] = useState(null);
-  const [currentUserRole, setCurrentUserRole] = useState("");
+  const [currentUserRole] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null); // Modal confirmación
 
   useEffect(() => {
     fetchDocuments();
-    getCurrentUserRole();
+    // getCurrentUserRole();
   }, []);
 
-  const getCurrentUserRole = async () => {
-    try {
-      const res = await api.get("/auth/me");
-      setCurrentUserRole(res.data.role);
-    } catch {
-      console.error("No se pudo obtener el rol del usuario");
-    }
-  };
+  // const getCurrentUserRole = async () => {
+  //   try {
+  //     // const res = await api.get("/auth/me");
+  //     setCurrentUserRole(res.data.role);
+  //     //aca se guarda el email para comparar
+  //     api.defaults.headers.common["user-email"] = res.data.email;
+  //   } catch {
+  //     // console.error("No se pudo obtener el rol del usuario");
+  //   }
+  // };
 
   const fetchDocuments = async () => {
     try {
       const res = await getDocuments();
       setDocuments(res.data.documentos || []);
+      // se guarda el email que el backend nos envia
+      api.defaults.headers.common["user-email"] = res.data.current_user_email;
     } catch {
       setError("Error cargando documentos");
     }
@@ -128,7 +132,9 @@ const Documents = () => {
             </tr>
           </thead>
           <tbody>
-            {documents.map((doc) => (
+            {documents.map((doc) => {
+
+              return (
               <tr key={doc.id}>
                 <td>{doc.id}</td>
                 <td>{doc.nombre}</td>
@@ -138,7 +144,7 @@ const Documents = () => {
                 <td>
                   <button onClick={() => handleViewDocument(doc.id)}>Ver Detalle</button>
                   <button onClick={() => handleViewTables(doc.id)}>Ver Tablas</button>
-                  {(currentUserRole === "admin" || doc.uploaded_by === (api.defaults.headers.common["user-email"] || "")) && (
+                  { true && (
                     <button
                       style={{ backgroundColor: "red", color: "white", marginLeft: "5px" }}
                       onClick={() => setConfirmDeleteId(doc.id)}
@@ -148,7 +154,8 @@ const Documents = () => {
                   )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 

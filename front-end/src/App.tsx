@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
@@ -10,10 +12,10 @@ import AdminRegister from './components/AdminRegister';
 import AdminUsers from './components/AdminUsers';
 import Documents from './components/Documents';
 
+// Importa el archivo de estilos CSS
+import './App.css'; 
 
-import './App.css'; // estilos de App.css
-
-function App() {
+const App: React.FC = () => { // Se usa React.FC para tipar el componente funcional
   return (
     <Router>
       <Routes>
@@ -31,7 +33,7 @@ function App() {
           } 
         />
         
-        {/* Ruta para Usuarios Bloqueados  */}
+        {/* Ruta para Usuarios Bloqueados */}
         <Route 
           path="/admin/users" 
           element={
@@ -41,7 +43,7 @@ function App() {
           } 
         />
 
-        {/*  para el registro de usuarios por el administrador */}
+        {/* Ruta para el registro de usuarios por el administrador */}
         <Route 
           path="/admin/register" 
           element={
@@ -51,7 +53,7 @@ function App() {
           } 
         />
         
-        {/*  para la gestión de todos los usuarios */}
+        {/* Ruta para la gestión de todos los usuarios */}
         <Route 
           path="/admin/all-users" 
           element={
@@ -61,7 +63,7 @@ function App() {
           } 
         />
 
-        {/* Subida de los Doucmentos PDF*/}
+        {/* Subida de los Documentos PDF*/}
         <Route
           path='/documents/upload'
           element={
@@ -73,6 +75,6 @@ function App() {
       </Routes>
     </Router>
   );
-}
+};
 
 export default App;

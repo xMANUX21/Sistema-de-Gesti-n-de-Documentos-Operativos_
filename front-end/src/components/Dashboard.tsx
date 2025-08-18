@@ -1,35 +1,38 @@
-// src/components/Dashboard.js
+// src/components/Dashboard.tsx
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import Sidebar from './Sidebar';
+import { IDecodedUserToken } from '../types';
 
-const Dashboard = () => {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true); 
+const Dashboard: React.FC = () => {
+    // Type 'user' as IDecodedUserToken or null
+    const [user, setUser] = useState<IDecodedUserToken | null>(null);
+    // Type 'isLoading' as boolean
+    const [isLoading, setIsLoading] = useState<boolean>(true); 
     const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (token) {
             try {
-                const decodedToken = jwtDecode(token);
+                // Type the decoded token
+                const decodedToken: IDecodedUserToken = jwtDecode(token);
                 setUser(decodedToken);
             } catch (error) {
+                console.error("Error decoding token:", error);
                 localStorage.removeItem('access_token');
                 navigate('/');
             }
         }
-        setIsLoading(false); // <--- Finaliza el estado de carga
+        setIsLoading(false);
     }, [navigate]);
 
-    // Muestra un mensaje de carga mientras se decodifica el token
     if (isLoading) {
         return <div>Cargando...</div>;
     }
 
-    // Si no hay token, redirige al login
     if (!user) {
         return <div>No autorizado. Redirigiendo...</div>;
     }

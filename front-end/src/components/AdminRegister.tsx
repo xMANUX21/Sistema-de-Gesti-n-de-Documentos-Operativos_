@@ -88,13 +88,7 @@ const AdminRegister: React.FC = () => {
                             <label>Departamento:</label>
                             <input type="text" name="department" value={formData.department} onChange={handleChange} required />
                         </div>
-                        <div>
-                            <label>Rol:</label>
-                            <select name="role" value={formData.role} onChange={handleChange}>
-                                <option value="operador">Operador</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
+    
                         <button type="submit">Registrar</button>
                     </form>
                     {message && <p className="success-message">{message}</p>}

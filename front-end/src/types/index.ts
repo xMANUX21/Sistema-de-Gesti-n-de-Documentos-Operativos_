@@ -31,7 +31,7 @@ export interface IUser {
 }
 
 // Interfaz para los datos de usuario que se envían al backend para registro.
-// 'Omit' crea un nuevo tipo sin los campos que el backend genera automáticamente.
+// Con el Omit crea un nuevo tipo sin los campos que el backend genera automáticamente.
 export type IRegisterUser = Omit<IUser, 'id' | 'failed_attempts' | 'is_locked'>;
 
 export interface IAdminRegisterForm extends IRegisterUser {
@@ -60,6 +60,6 @@ export interface IDocumentTable {
   detection: string;
   confidence: number;
   title_guess?: string; 
-  headers?: any; // JSON, puede ser un array de strings. Se usa 'any' si la estructura es flexible.
-  rows_data?: any; // JSON, puede ser un array de arrays. Se usa 'any' si la estructura es flexible.
+  headers?: any; // JSON, puede ser un array de strings. Se usa el any si la estructura es flexible.
+  rows_data?: any; // JSON, puede ser un array de arrays. Se usa con any si la estructura es flexible.
 }

@@ -1,24 +1,31 @@
+// src/components/Users.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import api from '../services/api';
 import Sidebar from './Sidebar';
+import { IDecodedUserToken, IUser } from '../types'; 
 
-const Users = () => {
-    const [lockedUsers, setLockedUsers] = useState([]);
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
-    const [user, setUser] = useState(null); // Estado para la información del usuario
+const Users: React.FC = () => { // Tipamos el componente como React.FC
+    // Tipamos 'lockedUsers' como un array de IUser
+    const [lockedUsers, setLockedUsers] = useState<IUser[]>([]);
+    // Tipamos 'message' y 'error' como string
+    const [message, setMessage] = useState<string>('');
+    const [error, setError] = useState<string>('');
+    // Tipamos 'user' como IDecodedUserToken o null
+    const [user, setUser] = useState<IDecodedUserToken | null>(null);
     const navigate = useNavigate();
 
-    // 1. Obtener la información del usuario del token al cargar el componente
+    //  Obtener la información del usuario del token al cargar el componente
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (token) {
             try {
-                const decodedToken = jwtDecode(token);
+                // Tipamos la decodificación del token
+                const decodedToken: IDecodedUserToken = jwtDecode(token);
                 setUser(decodedToken);
             } catch (error) {
+                console.error("Error decoding token:", error);
                 localStorage.removeItem('access_token');
                 navigate('/');
             }
@@ -28,39 +35,46 @@ const Users = () => {
     // Para obtener usuarios bloqueados del backend
     const fetchLockedUsers = async () => {
         try {
-            const response = await api.get('/admin/locked-users');
+            // Tipamos la respuesta esperada: un array de IUser
+            const response = await api.get<IUser[]>('/admin/locked-users');
             setLockedUsers(response.data);
             if (response.data.length === 0) {
                 setMessage('No hay usuarios bloqueados.');
             }
-        } catch (err) {
+        } catch (err: any) { 
             setError('No tienes permisos para ver esta página.');
         }
     };
 
     // Para desbloquear a un usuario
-    const unlockUser = async (userId) => {
+    const unlockUser = async (userId: number) => { // Tipamos userId como number
         try {
             await api.put(`/admin/users/${userId}/unlock`);
             setMessage('Usuario desbloqueado con éxito.');
-            // Vuelve a cargar la lista 
+            // Vuelve a cargar la lista después de desbloquear
             fetchLockedUsers();
-        } catch (err) {
+        } catch (err: any) { // Any para capturar errores
             setError('Ocurrió un error al intentar desbloquear al usuario.');
         }
     };
 
-    // Cargar la lista de usuarios cuando el componente se monta
+    // Cargar la lista de usuarios cuando el componente se monta o cuando el usuario (admin) se carga
     useEffect(() => {
-        fetchLockedUsers();
-    }, []);
+        // Solo cargar si el usuario está disponible y es un admin
+        if (user && user.role === 'admin') {
+            fetchLockedUsers();
+        } else if (user && user.role !== 'admin') {
+            // Manejar si un usuario que no sea admin al intentar acceder
+            setError('Acceso denegado: esta página es solo para administradores.');
+        }
+    }, [user, navigate]); // Se utiliza 'navigate' para redirigir si es necesario
 
-    //  Manejo de estados de carga y error
+    // Manejo de estados de carga y error
     if (error) {
         return <div className="error-message">{error}</div>;
     }
     
-    // Si el usuario no se ha cargado aun
+    // Si el usuario no se ha cargado aún, muestra un mensaje de carga.
     if (!user) {
       return <div>Cargando...</div>;
     }
@@ -70,7 +84,6 @@ const Users = () => {
         <div className="app-layout">
             <Sidebar user={user} />
             <main className="content">
-                {/*  div a users-table-container' */}
                 <div className="users-table-container"> 
                     <h2>Usuarios Bloqueados</h2>
                     {message && <p className="info-message">{message}</p>}
@@ -84,7 +97,8 @@ const Users = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {lockedUsers.map(userItem => (
+                            {/* Tipamos userItem como IUser */}
+                            {lockedUsers.map((userItem: IUser) => (
                                 <tr key={userItem.id}>
                                     <td>{userItem.id}</td>
                                     <td>{userItem.name}</td>

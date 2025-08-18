@@ -86,28 +86,28 @@ def list_documents(
     current_user: dict = Depends(get_current_user)
 ):
     cursor = connection.cursor(dictionary=True)
-    
+
     if current_user.role == "admin":
         cursor.execute("""
-            SELECT d.id, d.nombre, d.fecha_subida, d.department, 
-                   COALESCE(u.email, '') AS uploaded_by
-            FROM documentos d
-            LEFT JOIN users u ON d.uploaded_by = u.email
-            ORDER BY d.fecha_subida DESC
+            SELECT id, nombre, fecha_subida, department, uploaded_by
+            FROM documentos
+            ORDER BY fecha_subida DESC
         """)
     else:
         cursor.execute("""
-            SELECT d.id, d.nombre, d.fecha_subida, d.department, 
-                   COALESCE(u.email, '') AS uploaded_by
-            FROM documentos d
-            LEFT JOIN users u ON d.uploaded_by = u.email
-            WHERE d.department = %s
-            ORDER BY d.fecha_subida DESC
+            SELECT id, nombre, fecha_subida, department, uploaded_by
+            FROM documentos
+            WHERE department = %s
+            ORDER BY fecha_subida DESC
         """, (current_user.department,))
-    
+
     documentos = cursor.fetchall()
     cursor.close()
-    return {"documentos": documentos}
+
+    return {
+        "documentos": documentos,
+        "current_user_email": current_user.email
+    }
 
 
 @router.get("/documents/{document_id}")

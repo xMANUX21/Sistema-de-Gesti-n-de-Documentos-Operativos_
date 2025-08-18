@@ -7,8 +7,7 @@ import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Users from './components/Users';
 import AdminRegister from './components/AdminRegister'; 
-import AdminUsers from './components/AdminUsers';   
-import UploadDocument from './components/UploadDocument';
+import AdminUsers from './components/AdminUsers';
 import Documents from './components/Documents';
 
 

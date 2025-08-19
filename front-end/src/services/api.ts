@@ -1,7 +1,7 @@
 // src/services/api.ts
 
 import axios, { AxiosResponse } from 'axios';
-import { ILoginResponse, IUser, IDocument, IDocumentTable } from '../types';
+import { ILoginResponse, IUser, IDocument, IDocumentTable, UserRole } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:8000/api', // Esta URL debe ser del backend
@@ -35,39 +35,53 @@ export const resetPassword = (token: string, password: string): Promise<AxiosRes
   api.post('/auth/reset-password', { token, password: password });
 
 
-// ==================== DOCUMENTS ====================
-
-// Subir documento PDF
-export const uploadDocument = (formData: FormData): Promise<AxiosResponse<IDocument>> =>
-  api.post("/documents/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+/* ================= DOCUMENTS ================= */
+// Subir PDF
+export const uploadDocument = (
+  formData: FormData
+): Promise<AxiosResponse<{ document_id: number; tables_count: number }>> =>
+  api.post('/documents/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-// Obtener todos los documentos
-export const getDocuments = (): Promise<AxiosResponse<IDocument[]>> => api.get("/documents");
+// Lista de documentos + email del usuario logueado
+export const getDocuments = (): Promise<
+  AxiosResponse<{
+    documentos: IDocument[];
+    current_user_email: string;
+    current_user_role: UserRole;
+  }>
+> => api.get('/documents');
 
-// Obtener un documento por ID
-export const getDocumentById = (id: number): Promise<AxiosResponse<IDocument>> => api.get(`/documents/${id}`);
+// Detalle de un documento
+export const getDocumentById = (
+  id: number
+): Promise<AxiosResponse<IDocument>> => api.get(`/documents/${id}`);
 
-// Eliminar un documento por ID
-export const deleteDocument = (id: number): Promise<AxiosResponse<any>> => api.delete(`/documents/${id}`);
+// Eliminar documento
+export const deleteDocument = (
+  id: number
+): Promise<AxiosResponse<{ message: string }>> =>
+  api.delete(`/documents/${id}`);
 
-
-// ==================== TABLES ====================
-
-// Obtener tablas por ID de documento
-export const getTablesByDocumentId = (documentId: number): Promise<AxiosResponse<IDocumentTable[]>> =>
+/* ================= TABLES ================= */
+// Tablas por documento
+export const getTablesByDocumentId = (
+  documentId: number
+): Promise<AxiosResponse<{ items: IDocumentTable[] }>> =>
   api.get(`/tables/${documentId}`);
 
-// Obtener contenido de una tabla específica
-export const getTableContent = (documentId: number, tableUid: string): Promise<AxiosResponse<any>> =>
+// Contenido de una tabla específica
+export const getTableContent = (
+  documentId: number,
+  tableUid: string
+): Promise<AxiosResponse<IDocumentTable>> =>
   api.get(`/tables/${documentId}/${tableUid}`);
 
-// Buscar en todas las tablas
-export const searchTables = (query: string): Promise<AxiosResponse<any>> =>
-  api.get(`/tables/search?q=${encodeURIComponent(query)}`);
-
+// Búsqueda en tablas
+export const searchTables = (
+  query: string
+): Promise<AxiosResponse<{ results: any[] }>> =>
+  api.get(`/tables/search`, { params: { q: query } });
 
 export default api;

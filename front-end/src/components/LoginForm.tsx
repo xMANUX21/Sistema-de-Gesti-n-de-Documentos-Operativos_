@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
+// src/components/LoginForm.tsx
+
+import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
+// import { ILoginResponse } from '../types'; //  Importamos la interfaz centralizada
 
-const LoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+const LoginForm: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
+      // Usamos ILoginResponse para tipar la respuesta
       const response = await login(email, password);
-      const token = response.data.access_token;
+      const token: string = response.data.access_token;
       
-      // Guarda el token en el almacenamiento local
       localStorage.setItem('access_token', token);
       
-      // Redirige al usuario a la página principal
       navigate('/dashboard'); 
-    } catch (err) {
-      // Manejo de errores
+    } catch (err: any) {
       if (err.response && err.response.data && err.response.data.detail) {
         setError(err.response.data.detail);
       } else {
@@ -38,7 +40,7 @@ const LoginForm = () => {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -47,7 +49,7 @@ const LoginForm = () => {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
           />
         </div>

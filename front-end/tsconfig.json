@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es2017",             /* Versión de ECMAScript para el código compilado */
+    "lib": ["dom", "dom.iterable", "esnext"], /* Bibliotecas de entorno disponibles para el código */
+    "allowJs": true,                /* Permitir archivos JavaScript en un proyecto TypeScript */
+    "skipLibCheck": true,           /* Omitir la comprobación de tipos de todos los archivos de declaración (.d.ts) */
+    "esModuleInterop": true,        /* Permite la interoperabilidad entre módulos CommonJS y ES */
+    "allowSyntheticDefaultImports": true, /* Permite importaciones predeterminadas sintéticas */
+    "strict": true,                 /* Habilitar todas las opciones estrictas de verificación de tipos */
+    "forceConsistentCasingInFileNames": true, /* Exigir el uso de mayúsculas y minúsculas consistentes en los nombres de archivo */
+    "noFallthroughCasesInSwitch": true, /* Informar errores para casos de switch sin interrupción */
+    "module": "esnext",             /* Especificar el sistema de módulos de destino */
+    "moduleResolution": "node",     /* Estrategia de resolución de módulos */
+    "resolveJsonModule": true,      /* Incluye módulos JSON */
+    "isolatedModules": true,        /* Garantiza que cada archivo se pueda transpilar de forma segura en un módulo separado */
+    "noEmit": true,                 /* No emitir archivos JavaScript */
+    "jsx": "react-jsx",             /* Soporte JSX */
+    "outDir": "./dist",             /* Directorio de salida para los archivos JavaScript compilados */
+    "baseUrl": "./src",             /* Directorio base para la resolución de módulos no relativos */
+    "paths": {                      /* Mapeos de rutas para importaciones */
+      "@components/*": ["components/*"],
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"],
+      "@styles/*": ["styles/*"]
+    }
+  },
+  "include": [
+    "src"                           /* Incluye todos los archivos en el directorio 'src' */
+  ],
+  "exclude": [
+    "node_modules",                 /* Excluye el directorio 'node_modules' */
+    "dist"                          /* Excluye el directorio 'dist' */
+  ]
+}

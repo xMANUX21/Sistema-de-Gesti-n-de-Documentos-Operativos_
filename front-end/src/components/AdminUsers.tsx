@@ -1,17 +1,19 @@
-// src/components/AdminUsers.js
+// src/components/AdminUsers.tsx
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import api from '../services/api';
 import Sidebar from './Sidebar';
+import { IDecodedUserToken, IUser } from '../types'; // Importa las interfaces necesarias
 
-const AdminUsers = () => {
-    // Definiciones de estado
-    const [users, setUsers] = useState([]);
-    const [message] = useState(''); //  lo mantenemos para consistencia
-    const [error, setError] = useState('');
-    const [user, setUser] = useState(null);
+const AdminUsers: React.FC = () => { // Tipamos el componente
+    // Tipamos el estado 'users' como un array de IUser
+    const [users, setUsers] = useState<IUser[]>([]);
+    const [message] = useState<string>(''); // Tipamos el estado como string
+    const [error, setError] = useState<string>(''); // Tipamos el estado como string
+    // Tipamos el estado 'user' como IDecodedUserToken o null
+    const [user, setUser] = useState<IDecodedUserToken | null>(null);
     const navigate = useNavigate();
 
     //  para obtener el token y decodificar la información del usuario
@@ -19,31 +21,37 @@ const AdminUsers = () => {
         const token = localStorage.getItem('access_token');
         if (token) {
             try {
-                const decodedToken = jwtDecode(token);
+                // Tipamos la decodificación del token
+                const decodedToken: IDecodedUserToken = jwtDecode(token);
                 setUser(decodedToken);
             } catch (error) {
+                console.error("Error decoding token:", error);
                 localStorage.removeItem('access_token');
                 navigate('/');
             }
         }
     }, [navigate]);
 
-    // para obtener todos los usuarios del backend
+    //  para obtener todos los usuarios del backend
     const fetchAllUsers = async () => {
         try {
-            const response = await api.get('/users');
+            // Tipamos la respuesta esperada de la API
+            const response = await api.get<{ users: IUser[] }>('/users/');
             setUsers(response.data.users);
-        } catch (err) {
+        } catch (err: any) { // Tipamos el error como any
             setError('No tienes permisos para ver esta página o hubo un error.');
         }
     };
 
-    // para llamar a la API cuando el usuario se ha cargado
+    // Efecto para llamar a la API cuando el usuario se ha cargado y es admin
     useEffect(() => {
-        if (user) {
+        if (user && user.role === 'admin') { // Aseguramos que solo los admins puedan buscar usuarios
             fetchAllUsers();
+        } else if (user && user.role !== 'admin') {
+            setError('Acceso denegado: esta página es solo para administradores.');
+            
         }
-    }, [user]);
+    }, [user, navigate]); 
 
     // Manejo de estados de carga y error
     if (error) {
@@ -54,12 +62,10 @@ const AdminUsers = () => {
         return <div>Cargando...</div>;
     }
 
-    //  para renderizar el componente
-     return (
+    return (
         <div className="app-layout">
             <Sidebar user={user} />
             <main className="content">
-                {/* Agrega la clase al div que contiene la tabla */}
                 <div className="users-table-container">
                     <h2>Todos los Usuarios</h2>
                     {message && <p className="info-message">{message}</p>}
@@ -74,7 +80,8 @@ const AdminUsers = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(userItem => (
+                            {/* Aseguramos que userItem sea de tipo IUser */}
+                            {users.map((userItem: IUser) => (
                                 <tr key={userItem.id}>
                                     <td>{userItem.id}</td>
                                     <td>{userItem.name}</td>

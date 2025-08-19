@@ -3,7 +3,7 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
-import { ILoginResponse } from '../types'; //  Importamos la interfaz centralizada
+// import { ILoginResponse } from '../types'; //  Importamos la interfaz centralizada
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState<string>('');
